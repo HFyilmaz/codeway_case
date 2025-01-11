@@ -43,12 +43,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../stores/auth'
 // Firebase auth will be imported here
 
 const router = useRouter()
+const { login, error: authError, loading } = useAuth()
 const email = ref('')
 const password = ref('')
-const loading = ref(false)
 const error = ref('')
 
 const handleSignIn = async () => {
@@ -57,17 +58,13 @@ const handleSignIn = async () => {
     return
   }
 
-  loading.value = true
-  error.value = ''
-
   try {
-    // Firebase authentication will be implemented here
-    // For now, we'll just redirect to home
-    router.push('/')
+    await login(email.value, password.value)
+    if (!authError.value) {
+      router.push('/')
+    }
   } catch (err) {
     error.value = err.message || 'Failed to sign in'
-  } finally {
-    loading.value = false
   }
 }
 </script>

@@ -26,15 +26,33 @@
           <div class="col-actions"></div>
         </div>
 
-        <div v-for="param in sortedParameters" :key="param.key" class="table-row">
-          <div class="col-key">{{ param.key }}</div>
-          <div class="col-value">{{ param.value }}</div>
-          <div class="col-desc">{{ param.description }}</div>
-          <div class="col-date">{{ param.createDate }}</div>
-          <div class="col-actions">
-            <button class="edit-button" @click="editParameter(param)">Edit</button>
-            <button class="delete-button" @click="deleteParameter(param)">Delete</button>
-          </div>
+        <div v-for="param in sortedParameters" :key="param.key" class="table-row" :class="{ 'editing-row': editingParam?.key === param.key }">
+          <template v-if="editingParam?.key === param.key">
+            <div class="col-key">
+              <input type="text" v-model="editingParam.key" />
+            </div>
+            <div class="col-value">
+              <input type="text" v-model="editingParam.value" />
+            </div>
+            <div class="col-desc">
+              <input type="text" v-model="editingParam.description" />
+            </div>
+            <div class="col-date">{{ param.createDate }}</div>
+            <div class="col-actions">
+              <button class="accept-button" @click="acceptEdit">Accept</button>
+              <button class="cancel-button" @click="cancelEdit">Cancel</button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="col-key">{{ param.key }}</div>
+            <div class="col-value">{{ param.value }}</div>
+            <div class="col-desc">{{ param.description }}</div>
+            <div class="col-date">{{ param.createDate }}</div>
+            <div class="col-actions">
+              <button class="edit-button" @click="editParameter(param)">Edit</button>
+              <button class="delete-button" @click="deleteParameter(param)">Delete</button>
+            </div>
+          </template>
         </div>
 
         <!-- New Parameter Row -->
@@ -60,9 +78,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../stores/auth'
 
 const router = useRouter()
+const { logout, user } = useAuth()
 const sortState = ref('none') // 'none', 'asc', 'desc'
+const editingParam = ref(null)
 
 // Sample data - will be replaced with actual API calls
 const parameters = ref([
@@ -126,13 +147,24 @@ const newParam = ref({
 })
 
 const handleSignOut = async () => {
-  // Firebase sign out logic will be implemented here
+  await logout()
   router.push('/signin')
 }
 
 const editParameter = (param) => {
-  // Edit logic will be implemented
-  console.log('Edit:', param)
+  editingParam.value = { ...param }
+}
+
+const acceptEdit = () => {
+  const index = parameters.value.findIndex(p => p.key === editingParam.value.key)
+  if (index !== -1) {
+    parameters.value[index] = { ...editingParam.value }
+  }
+  editingParam.value = null
+}
+
+const cancelEdit = () => {
+  editingParam.value = null
 }
 
 const deleteParameter = (param) => {
@@ -264,6 +296,44 @@ const addParameter = () => {
   color: #8b92a5;
 }
 
+.accept-button, .cancel-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.3s;
+}
+
+.accept-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #9e9e9e;
+  color: white;
+}
+
+.table-row input {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #262b38;
+  border: 1px solid #363c4c;
+  border-radius: 4px;
+  color: white;
+}
+
+.table-row input:focus {
+  outline: none;
+  border-color: #4c5fff;
+}
+
+.editing-row {
+    border-radius: 4px;
+    background-color: rgba(255, 255, 0, 0.1);
+}
+
 @media (max-width: 768px) {
     .header {
         position: fixed;
@@ -290,6 +360,10 @@ const addParameter = () => {
         border-radius: 8px;
         gap: 0rem;
         border: 1px solid #ffffff;
+    }
+
+    .editing-row {
+        background: rgba(255, 255, 0, 0.1) !important;
     }
 
     .col-key, 
@@ -355,6 +429,12 @@ const addParameter = () => {
         margin: 0;
         width: 100%;
         max-width: 120px;
+    }
+
+    .accept-button,
+    .cancel-button {
+        flex: 1;
+        max-width: 80px;
     }
 }
 </style> 
