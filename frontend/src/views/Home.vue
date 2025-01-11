@@ -45,7 +45,7 @@
           <div class="col-value">
             <input type="text" v-model="newParam.value" placeholder="Value" />
           </div>
-          <div class="col-desc" style="width: 51%;">
+          <div class="col-desc new-desc">
             <input type="text" v-model="newParam.description" placeholder="New Description" />
           </div>
           <div class="col-actions">
@@ -159,6 +159,11 @@ const addParameter = () => {
   align-items: center;
   padding: 1rem 2rem;
   background-color: #1a1f2c;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
 .user-button {
@@ -171,7 +176,7 @@ const addParameter = () => {
 }
 
 .main-content {
-  padding: 2rem 0rem;
+  padding: 5rem 0rem;
 }
 
 .config-table {
@@ -216,6 +221,7 @@ const addParameter = () => {
 .col-key { width: 18%; padding-right: 1rem; }
 .col-value { width: 18%; padding-right: 1rem; }
 .col-desc { width: 36%; padding-right: 1rem; }
+.col-desc.new-desc { width: 51%; padding-right: 1rem; }
 .col-date { width: 15%; padding-right: 1rem; }
 .col-actions { width: 15%; display: flex; gap: 0.5rem; justify-content: flex-end; }
 
@@ -259,13 +265,96 @@ const addParameter = () => {
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    padding: 1rem;
-    overflow-x: auto;
+    .header {
+        position: fixed;
+    }
+
+    .main-content {
+        padding: 3.5rem 0rem;
+    }
+    
+    .config-table {
+    min-width: unset;
   }
-  
-  .config-table {
-    min-width: 800px;
-  }
+
+    .table-header {
+        display: none;
+    }
+
+    .table-row {
+        display: flex;
+        flex-direction: column;
+        background: #262b38;
+        margin: 1rem 0rem;
+        padding: 1rem;
+        border-radius: 8px;
+        gap: 0rem;
+        border: 1px solid #ffffff;
+    }
+
+    .col-key, 
+    .col-value, 
+    .col-desc, 
+    .col-date,
+    .col-actions,
+    .col-desc.new-desc {
+        width: 100%;
+        padding: 0.25rem 0;
+    }
+
+    .col-key::before {
+        content: "Parameter Key: ";
+        color: #8b92a5;
+        font-weight: 500;
+    }
+
+    .col-value::before {
+        content: "Value: ";
+        color: #8b92a5;
+        font-weight: 500;
+    }
+
+    .col-desc::before {
+        content: "Description: ";
+        color: #8b92a5;
+        font-weight: 500;
+    }
+
+    .col-date::before {
+        content: "Create Date: ";
+        color: #8b92a5;
+        font-weight: 500;
+    }
+
+    .col-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .edit-button,
+    .delete-button {
+        flex: 1;
+        max-width: 80px;
+    }
+
+    .new-parameter {
+        background: transparent;
+        gap: 1rem;
+    }
+    
+    .new-parameter input {
+        margin-top: 0.5rem;
+    }
+
+    .new-parameter .col-actions {
+        justify-content: center;
+    }
+
+    .add-button {
+        margin: 0;
+        width: 100%;
+        max-width: 120px;
+    }
 }
 </style> 
