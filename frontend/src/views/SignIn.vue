@@ -44,7 +44,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
-// Firebase auth will be imported here
 
 const router = useRouter()
 const { login, error: authError, loading } = useAuth()
@@ -58,13 +57,17 @@ const handleSignIn = async () => {
     return
   }
 
-  try {
-    await login(email.value, password.value)
-    if (!authError.value) {
-      router.push('/')
+  error.value = ''
+  await login(email.value, password.value)
+  
+  if (authError.value) {
+    if (authError.value.includes('auth/invalid-credential')) {
+      error.value = 'Invalid email or password'
+    } else {
+      error.value = 'Failed to sign in. Please try again.'
     }
-  } catch (err) {
-    error.value = err.message || 'Failed to sign in'
+  } else {
+    router.push('/')
   }
 }
 </script>
