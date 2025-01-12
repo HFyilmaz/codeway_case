@@ -57,6 +57,7 @@
 
         <!-- New Parameter Row -->
         <div class="table-row new-parameter">
+          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <div class="col-key">
             <input type="text" v-model="newParam.key" placeholder="New Parameter" />
           </div>
@@ -76,48 +77,57 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 
 const router = useRouter()
-const { logout, user } = useAuth()
-const sortState = ref('none') // 'none', 'asc', 'desc'
+const { logout, user, getToken } = useAuth()
+const sortState = ref('none')
 const editingParam = ref(null)
+const errorMessage = ref('')
+const parameters = ref([])
 
-// Sample data - will be replaced with actual API calls
-const parameters = ref([
-  {
-    key: 'min_version',
-    value: '1.4.4',
-    description: 'Minimum required version of the app',
-    createDate: '10/05/2021 01:58'
-  },
-  {
-    key: 'latest_version',
-    value: '1.4.7',
-    description: 'Latest version of the app',
-    createDate: '10/05/2021 01:58'
-  },
-  {
-    key: 'pricing_tier',
-    value: 't6',
-    description: 'Pricing tier of the user',
-    createDate: '07/07/2021 11:13'
-  },
-  {
-    key: 'scroll',
-    value: '5',
-    description: 'Index of Scroll Paywall for free users.',
-    createDate: '25/08/2021 10:22'
-  },
-  {
-    key: 'scroll_limit',
-    value: '13',
-    description: 'Index of Scroll Limit Paywall for free users.',
-    createDate: '25/08/2021 10:23'
+// Fetch all configurations
+const fetchConfigurations = async () => {
+  try {
+    const token = await getToken()
+    const response = await fetch('http://localhost:3000/config/all', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch configurations')
+    }
+
+    const configs = await response.json()
+    parameters.value = configs.map(config => ({
+      key: config.key,
+      value: config.value,
+      description: config.description,
+      createDate: formatDate(config.createdAt)
+    }))
+
+  } catch (error) {
+    console.error('Error fetching configurations:', error)
+    errorMessage.value = 'Failed to load configurations'
   }
-])
+}
+
+// Load configurations on component mount
+onMounted(fetchConfigurations)
+
+const formatDate = (isoDate) => {
+  const date = new Date(isoDate)
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear()
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
 
 const sortedParameters = computed(() => {
   if (sortState.value === 'none') return parameters.value
@@ -155,27 +165,120 @@ const editParameter = (param) => {
   editingParam.value = { ...param }
 }
 
-const acceptEdit = () => {
-  const index = parameters.value.findIndex(p => p.key === editingParam.value.key)
-  if (index !== -1) {
-    parameters.value[index] = { ...editingParam.value }
+const acceptEdit = async () => {
+  try {
+    const token = await getToken()
+    const response = await fetch(`http://localhost:3000/config/update/${editingParam.value.key}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        value: editingParam.value.value,
+        description: editingParam.value.description
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update parameter')
+    }
+
+    const result = await response.json()
+    
+    // Update the parameter in the list
+    const index = parameters.value.findIndex(p => p.key === editingParam.value.key)
+    if (index !== -1) {
+      parameters.value[index] = {
+        key: result.config.key,
+        value: result.config.value,
+        description: result.config.description,
+        createDate: formatDate(result.config.createdAt)
+      }
+    }
+
+    editingParam.value = null
+    errorMessage.value = ''
+  } catch (error) {
+    console.error('Error updating parameter:', error)
+    errorMessage.value = error.message
   }
-  editingParam.value = null
 }
 
 const cancelEdit = () => {
   editingParam.value = null
+  errorMessage.value = ''
 }
 
-const deleteParameter = (param) => {
-  // Delete logic will be implemented
-  console.log('Delete:', param)
+const deleteParameter = async (param) => {
+  try {
+    const token = await getToken()
+    const response = await fetch(`http://localhost:3000/config/delete/${param.key}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete parameter')
+    }
+
+    // Remove the parameter from the list
+    parameters.value = parameters.value.filter(p => p.key !== param.key)
+    errorMessage.value = ''
+  } catch (error) {
+    console.error('Error deleting parameter:', error)
+    errorMessage.value = error.message
+  }
 }
 
-const addParameter = () => {
-  // Add logic will be implemented
-  console.log('Add:', newParam.value)
-  newParam.value = { key: '', value: '', description: '' }
+const addParameter = async () => {
+  try {
+    // Basic validation
+    if (!newParam.value.key || !newParam.value.value || !newParam.value.description) {
+      errorMessage.value = 'All fields are required'
+      return
+    }
+
+    const token = await getToken()
+    const response = await fetch('http://localhost:3000/config/add_config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        key: newParam.value.key,
+        value: newParam.value.value,
+        description: newParam.value.description
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to add parameter')
+    }
+
+    const result = await response.json()
+    
+    // Add new parameter to the list
+    parameters.value.push({
+      key: result.config.key,
+      value: result.config.value,
+      description: result.config.description,
+      createDate: formatDate(result.config.createdAt)
+    })
+
+    // Clear the form
+    newParam.value = { key: '', value: '', description: '' }
+    errorMessage.value = ''
+  } catch (error) {
+    console.error('Error adding parameter:', error)
+    errorMessage.value = error.message
+  }
 }
 </script>
 
@@ -436,5 +539,12 @@ const addParameter = () => {
         flex: 1;
         max-width: 80px;
     }
+}
+
+.error-message {
+  color: #ff4c4c;
+  margin-bottom: 1rem;
+  text-align: center;
+  width: 100%;
 }
 </style> 

@@ -38,12 +38,20 @@ const useAuth = () => {
     }
   }
 
+  const getToken = async () => {
+    if (user.value) {
+      return await user.value.getIdToken()
+    }
+    throw new Error('User is not authenticated')
+  }
+
   return {
     user,
     error,
     loading,
     login,
-    logout
+    logout,
+    getToken
   }
 }
 
