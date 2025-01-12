@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: config-management-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: API_TOKEN
+        sync: false
+
+  - type: web
+    name: config-management-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run preview
+    envVars:
+      - key: VITE_API_KEY
+        sync: false
+      - key: VITE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_PROJECT_ID
+        sync: false
+      - key: VITE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_APP_ID
+        sync: false
+      - key: VITE_MEASUREMENT_ID
+        sync: false
+      - key: VITE_API_BASE_URL
+        sync: false
