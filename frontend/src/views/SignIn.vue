@@ -111,7 +111,8 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #7e57ff;
+  border-color: #ba2782;
+  
 }
 
 input::placeholder {

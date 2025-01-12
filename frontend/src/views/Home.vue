@@ -537,7 +537,7 @@ const handleParameterUpdate = (updatedParam) => {
     }
 
     .main-content {
-        padding: 3.5rem 0rem;
+        padding: 2rem 0rem;
     }
     
     .config-table {
