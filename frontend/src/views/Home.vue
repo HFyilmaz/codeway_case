@@ -57,20 +57,39 @@
 
         <!-- New Parameter Row -->
         <div class="table-row new-parameter">
-          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <div class="col-key">
-            <input type="text" v-model="newParam.key" placeholder="New Parameter" />
+            <input 
+              type="text" 
+              v-model="newParam.key" 
+              placeholder="New Parameter"
+              :class="{ 'invalid-input': invalidFields.key }" 
+            />
           </div>
           <div class="col-value">
-            <input type="text" v-model="newParam.value" placeholder="Value" />
+            <input 
+              type="text" 
+              v-model="newParam.value" 
+              placeholder="Value"
+              :class="{ 'invalid-input': invalidFields.value }" 
+            />
           </div>
           <div class="col-desc new-desc">
-            <input type="text" v-model="newParam.description" placeholder="New Description" />
+            <input 
+              type="text" 
+              v-model="newParam.description" 
+              placeholder="New Description"
+              :class="{ 'invalid-input': invalidFields.description }" 
+            />
           </div>
           <div class="col-actions">
             <button class="add-button" @click="addParameter">ADD</button>
           </div>
         </div>
+
+        <div class="table-row">
+          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+        </div>
+        
       </div>
     </main>
   </div>
@@ -149,6 +168,20 @@ const newParam = ref({
   value: '',
   description: ''
 })
+
+const invalidFields = ref({
+  key: false,
+  value: false,
+  description: false
+})
+
+const resetValidation = () => {
+  invalidFields.value = {
+    key: false,
+    value: false,
+    description: false
+  }
+}
 
 const handleSignOut = async () => {
   await logout()
@@ -231,7 +264,15 @@ const deleteParameter = async (param) => {
 
 const addParameter = async () => {
   try {
-    // Basic validation
+    // Reset validation states
+    resetValidation()
+    
+    // Check each field and mark invalid ones
+    invalidFields.value.key = !newParam.value.key
+    invalidFields.value.value = !newParam.value.value
+    invalidFields.value.description = !newParam.value.description
+
+    // If any field is invalid, show error and return
     if (!newParam.value.key || !newParam.value.value || !newParam.value.description) {
       errorMessage.value = 'All fields are required'
       return
@@ -540,5 +581,13 @@ const addParameter = async () => {
   margin-bottom: 1rem;
   text-align: center;
   width: 100%;
+}
+
+.new-parameter input.invalid-input {
+  border-color: #ff4c4c;
+}
+
+.new-parameter input.invalid-input::placeholder {
+  color: rgba(255, 76, 76, 0.7);
 }
 </style> 
