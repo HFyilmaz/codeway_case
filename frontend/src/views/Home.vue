@@ -23,7 +23,11 @@
               {{ sortState === 'asc' ? '↓' : '↑' }}
             </span>
           </div>
-          <div class="col-actions"></div>
+          <div class="col-actions">
+            <button class="refresh-button" @click="fetchConfigurations" title="Refresh data">
+              <i class="mdi mdi-refresh"></i>
+            </button>
+          </div>
         </div>
 
         <div v-for="param in sortedParameters" :key="param.key" class="table-row" :class="{ 'editing-row': editingParam?.key === param.key }">
@@ -657,5 +661,26 @@ const handleParameterUpdate = (updatedParam) => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  color: #8b92a5;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.refresh-button:hover {
+  color: #fff;
+  transform: rotate(180deg);
+}
+
+.refresh-button i {
+  font-size: 1.2rem;
 }
 </style> 
