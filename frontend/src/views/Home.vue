@@ -109,6 +109,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import CountryOverridesModal from '../components/CountryOverridesModal.vue'
+import { API_ENDPOINTS } from '../config/api'
 
 const router = useRouter()
 const { logout, user, getToken } = useAuth()
@@ -120,7 +121,7 @@ const parameters = ref([])
 const fetchConfigurations = async () => {
   try {
     const token = await getToken()
-    const response = await fetch('http://localhost:3000/config/all', {
+    const response = await fetch(API_ENDPOINTS.config.all, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -204,7 +205,7 @@ const editParameter = (param) => {
 const acceptEdit = async () => {
   try {
     const token = await getToken()
-    const response = await fetch(`http://localhost:3000/config/update/${editingParam.value.key}`, {
+    const response = await fetch(API_ENDPOINTS.config.update(editingParam.value.key), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -249,7 +250,7 @@ const cancelEdit = () => {
 const deleteParameter = async (param) => {
   try {
     const token = await getToken()
-    const response = await fetch(`http://localhost:3000/config/delete/${param.key}`, {
+    const response = await fetch(API_ENDPOINTS.config.delete(param.key), {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -283,7 +284,7 @@ const addParameter = async () => {
     }
 
     const token = await getToken()
-    const response = await fetch('http://localhost:3000/config/add_config', {
+    const response = await fetch(API_ENDPOINTS.config.add, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -69,6 +69,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { API_ENDPOINTS } from '../config/api'
 
 const props = defineProps({
   show: {
@@ -116,7 +117,7 @@ const addOverride = async () => {
     }
 
     const token = await props.getToken()
-    const response = await fetch(`http://localhost:3000/config/update/${props.parameter.key}/country/${country}`, {
+    const response = await fetch(API_ENDPOINTS.config.countryOverrides.update(props.parameter.key, country), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -143,7 +144,7 @@ const addOverride = async () => {
 const deleteOverride = async (country) => {
   try {
     const token = await props.getToken()
-    const response = await fetch(`http://localhost:3000/config/delete/${props.parameter.key}/country/${country}`, {
+    const response = await fetch(API_ENDPOINTS.config.countryOverrides.delete(props.parameter.key, country), {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -184,7 +185,7 @@ const acceptEdit = async () => {
     }
 
     const token = await props.getToken()
-    const response = await fetch(`http://localhost:3000/config/update/${props.parameter.key}/country/${country}`, {
+    const response = await fetch(API_ENDPOINTS.config.countryOverrides.update(props.parameter.key, country), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
