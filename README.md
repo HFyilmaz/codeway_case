@@ -97,3 +97,8 @@ VITE_API_BASE_URL=your_api_base_url #e.g. http://localhost:3000
 For more detailed information about each service, please refer to their respective README files:
 - Backend: [backend/README.md](backend/README.md)
 - Frontend: [frontend/README.md](frontend/README.md)
+
+
+Deployed backend service: `https://config-management-backend-w1zp.onrender.com`
+
+Deployed frontend service: `https://config-management-frontend.onrender.com`
