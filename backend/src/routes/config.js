@@ -26,11 +26,17 @@ router.get('/all', verifyFirebaseToken, async (req, res) => {
 // Get configuration (for mobile clients)
 router.get('/', verifyApiToken, async (req, res) => {
   try {
+    const { country } = req.query;
     const configsSnapshot = await db.collection('configurations').get();
     const configs = {};
     
     configsSnapshot.forEach(doc => {
-      configs[doc.id] = doc.data().value;
+      const data = doc.data();
+      if (country && data.countryOverrides && data.countryOverrides[country]) {
+        configs[doc.id] = data.countryOverrides[country];
+      } else {
+        configs[doc.id] = data.value;
+      }
     });
 
     res.json(configs);
@@ -63,6 +69,7 @@ router.post('/add_config', verifyFirebaseToken, async (req, res) => {
         key,
         value,
         description,
+        countryOverrides: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
@@ -87,7 +94,7 @@ router.post('/add_config', verifyFirebaseToken, async (req, res) => {
 router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
   try {
     const { key } = req.params;
-    const { value, description } = req.body;
+    const { value, description, countryOverrides } = req.body;
 
     // Validate required fields
     if (!value || !description) {
@@ -108,6 +115,10 @@ router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
+    if (countryOverrides) {
+      updateData.countryOverrides = countryOverrides;
+    }
+
     await configRef.update(updateData);
 
     res.json({
@@ -120,6 +131,73 @@ router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating configuration:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update country override
+router.put('/update/:key/country/:country', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { key, country } = req.params;
+    const { value } = req.body;
+
+    if (!value) {
+      return res.status(400).json({ error: 'Value is required' });
+    }
+
+    const configRef = db.collection('configurations').doc(key);
+    const configDoc = await configRef.get();
+
+    if (!configDoc.exists) {
+      return res.status(404).json({ error: 'Configuration not found' });
+    }
+
+    const currentData = configDoc.data();
+    const countryOverrides = currentData.countryOverrides || {};
+    countryOverrides[country] = value;
+
+    await configRef.update({
+      countryOverrides,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.json({
+      message: 'Country override updated successfully',
+      config: {
+        key,
+        ...currentData,
+        countryOverrides
+      }
+    });
+  } catch (error) {
+    console.error('Error updating country override:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete country override
+router.delete('/delete/:key/country/:country', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { key, country } = req.params;
+    const configRef = db.collection('configurations').doc(key);
+    const configDoc = await configRef.get();
+
+    if (!configDoc.exists) {
+      return res.status(404).json({ error: 'Configuration not found' });
+    }
+
+    const currentData = configDoc.data();
+    const countryOverrides = currentData.countryOverrides || {};
+    delete countryOverrides[country];
+
+    await configRef.update({
+      countryOverrides,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.json({ message: 'Country override deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting country override:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

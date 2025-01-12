@@ -49,6 +49,9 @@
             <div class="col-desc">{{ param.description }}</div>
             <div class="col-date">{{ param.createDate }}</div>
             <div class="col-actions">
+              <button class="country-button" @click="openCountryModal(param)">
+                <i class="mdi mdi-earth"></i>
+              </button>
               <button class="edit-button" @click="editParameter(param)">Edit</button>
               <button class="delete-button" @click="deleteParameter(param)">Delete</button>
             </div>
@@ -91,6 +94,13 @@
         
       </div>
     </main>
+
+    <CountryOverridesModal
+      v-model:show="showCountryModal"
+      :parameter="selectedParam"
+      :get-token="getToken"
+      @parameter-updated="handleParameterUpdate"
+    />
   </div>
 </template>
 
@@ -98,6 +108,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
+import CountryOverridesModal from '../components/CountryOverridesModal.vue'
 
 const router = useRouter()
 const { logout, user, getToken } = useAuth()
@@ -124,6 +135,7 @@ const fetchConfigurations = async () => {
       key: config.key,
       value: config.value,
       description: config.description,
+      countryOverrides: config.countryOverrides || {},
       createDate: formatDate(config.createdAt)
     }))
 
@@ -303,6 +315,25 @@ const addParameter = async () => {
   } catch (error) {
     console.error('Error adding parameter:', error)
     errorMessage.value = error.message
+  }
+}
+
+const showCountryModal = ref(false)
+const selectedParam = ref(null)
+
+const openCountryModal = (param) => {
+  selectedParam.value = { ...param }
+  showCountryModal.value = true
+}
+
+const handleParameterUpdate = (updatedParam) => {
+  const paramIndex = parameters.value.findIndex(p => p.key === updatedParam.key)
+  if (paramIndex !== -1) {
+    parameters.value[paramIndex] = {
+      ...parameters.value[paramIndex],
+      ...updatedParam
+    }
+    selectedParam.value = { ...parameters.value[paramIndex] }
   }
 }
 </script>
@@ -613,5 +644,17 @@ const addParameter = async () => {
 
 .new-parameter input.invalid-input::placeholder {
   color: rgba(255, 76, 76, 0.7);
+}
+
+.country-button {
+  background-color: #4c5fff;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style> 
