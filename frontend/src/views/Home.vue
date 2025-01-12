@@ -443,14 +443,14 @@ const handleParameterUpdate = (updatedParam) => {
   margin-right: 1rem;
 }
 .col-date { 
-  width: 15%; 
+  width: 12%; 
   padding-right: 1rem; 
   overflow-x: auto;
   white-space: nowrap;
   margin-right: 1rem;
 }
 
-.col-actions { width: 15%; display: flex; gap: 0.5rem; justify-content: flex-end; }
+.col-actions { width: 18%; display: flex; gap: 0.5rem; justify-content: flex-end; }
 
 .edit-button, .delete-button, .add-button {
   padding: 0.5rem 1rem;
