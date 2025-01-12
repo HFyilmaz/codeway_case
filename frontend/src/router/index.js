@@ -24,11 +24,9 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
-  // Wait for Firebase Auth to initialize
   const unsubscribe = auth.onAuthStateChanged((user) => {
     unsubscribe()
     

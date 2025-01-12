@@ -55,7 +55,6 @@
           </template>
         </div>
 
-        <!-- New Parameter Row -->
         <div class="table-row new-parameter">
           <div class="col-key">
             <input 
@@ -107,7 +106,6 @@ const editingParam = ref(null)
 const errorMessage = ref('')
 const parameters = ref([])
 
-// Fetch all configurations
 const fetchConfigurations = async () => {
   try {
     const token = await getToken()
@@ -135,7 +133,6 @@ const fetchConfigurations = async () => {
   }
 }
 
-// Load configurations on component mount
 onMounted(fetchConfigurations)
 
 const formatDate = (isoDate) => {
@@ -214,7 +211,6 @@ const acceptEdit = async () => {
 
     const result = await response.json()
     
-    // Update the parameter in the list
     const index = parameters.value.findIndex(p => p.key === editingParam.value.key)
     if (index !== -1) {
       parameters.value[index] = {
@@ -253,7 +249,6 @@ const deleteParameter = async (param) => {
       throw new Error(error.error || 'Failed to delete parameter')
     }
 
-    // Remove the parameter from the list
     parameters.value = parameters.value.filter(p => p.key !== param.key)
     errorMessage.value = ''
   } catch (error) {
@@ -264,15 +259,12 @@ const deleteParameter = async (param) => {
 
 const addParameter = async () => {
   try {
-    // Reset validation states
     resetValidation()
     
-    // Check each field and mark invalid ones
     invalidFields.value.key = !newParam.value.key
     invalidFields.value.value = !newParam.value.value
     invalidFields.value.description = !newParam.value.description
 
-    // If any field is invalid, show error and return
     if (!newParam.value.key || !newParam.value.value || !newParam.value.description) {
       errorMessage.value = 'All fields are required'
       return
@@ -299,7 +291,6 @@ const addParameter = async () => {
 
     const result = await response.json()
     
-    // Add new parameter to the list
     parameters.value.push({
       key: result.config.key,
       value: result.config.value,
@@ -307,7 +298,6 @@ const addParameter = async () => {
       createDate: formatDate(result.config.createdAt)
     })
 
-    // Clear the form
     newParam.value = { key: '', value: '', description: '' }
     errorMessage.value = ''
   } catch (error) {
