@@ -20,7 +20,7 @@
           <div class="col-date sortable" @click="toggleSort">
             Create Date 
             <span class="sort-icon">
-              {{ sortState === 'asc' ? '↓' : sortState === 'desc' ? '↑' : '' }}
+              {{ sortState === 'asc' ? '↓' : '↑' }}
             </span>
           </div>
           <div class="col-actions"></div>
@@ -83,7 +83,7 @@ import { useAuth } from '../stores/auth'
 
 const router = useRouter()
 const { logout, user, getToken } = useAuth()
-const sortState = ref('none')
+const sortState = ref('asc')
 const editingParam = ref(null)
 const errorMessage = ref('')
 const parameters = ref([])
@@ -130,8 +130,6 @@ const formatDate = (isoDate) => {
 }
 
 const sortedParameters = computed(() => {
-  if (sortState.value === 'none') return parameters.value
-
   return [...parameters.value].sort((a, b) => {
     const dateA = new Date(a.createDate.split(' ')[0].split('/').reverse().join('-') + ' ' + a.createDate.split(' ')[1])
     const dateB = new Date(b.createDate.split(' ')[0].split('/').reverse().join('-') + ' ' + b.createDate.split(' ')[1])
@@ -143,11 +141,7 @@ const sortedParameters = computed(() => {
 })
 
 const toggleSort = () => {
-  sortState.value = sortState.value === 'none' 
-    ? 'asc' 
-    : sortState.value === 'asc' 
-      ? 'desc' 
-      : 'none'
+  sortState.value = sortState.value === 'asc' ? 'desc' : 'asc'
 }
 
 const newParam = ref({
