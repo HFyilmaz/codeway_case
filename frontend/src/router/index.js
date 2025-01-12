@@ -27,13 +27,19 @@ const router = createRouter({
 // Navigation guard
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const isAuthenticated = auth.currentUser
 
-  if (requiresAuth && !isAuthenticated) {
-    next('/signin')
-  } else {
-    next()
-  }
+  // Wait for Firebase Auth to initialize
+  const unsubscribe = auth.onAuthStateChanged((user) => {
+    unsubscribe()
+    
+    if (requiresAuth && !user) {
+      next('/signin')
+    } else if (to.path === '/signin' && user) {
+      next('/')
+    } else {
+      next()
+    }
+  })
 })
 
 export default router 

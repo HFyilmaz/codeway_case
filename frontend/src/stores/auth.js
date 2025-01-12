@@ -2,14 +2,16 @@ import { ref } from 'vue'
 import { auth } from '../firebase/config'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 
-// Create a reactive reference to store the user
+// Create reactive references
 const user = ref(null)
 const error = ref(null)
 const loading = ref(false)
+const isReady = ref(false)
 
 // Initialize auth state listener
 onAuthStateChanged(auth, (_user) => {
   user.value = _user
+  isReady.value = true
 })
 
 const useAuth = () => {
@@ -49,6 +51,7 @@ const useAuth = () => {
     user,
     error,
     loading,
+    isReady,
     login,
     logout,
     getToken
