@@ -85,8 +85,8 @@
           </div>
         </div>
 
-        <div class="table-row">
-          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <div class="table-row" v-if="errorMessage">
+          <div class="error-message">{{ errorMessage }}</div>
         </div>
         
       </div>
@@ -535,6 +535,7 @@ const addParameter = async () => {
     .col-desc.new-desc {
         width: 100%;
         padding: 0.25rem 0;
+        white-space: normal;
     }
 
     .col-key::before {
