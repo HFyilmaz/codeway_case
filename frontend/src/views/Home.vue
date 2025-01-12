@@ -388,11 +388,42 @@ const addParameter = async () => {
   align-items: center;
 }
 
-.col-key { width: 18%; padding-right: 1rem; }
-.col-value { width: 18%; padding-right: 1rem; }
-.col-desc { width: 36%; padding-right: 1rem; }
-.col-desc.new-desc { width: 51%; padding-right: 1rem; }
-.col-date { width: 15%; padding-right: 1rem; }
+.col-key { 
+  width: 18%; 
+  padding-right: 1rem; 
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-right: 1rem;
+}
+.col-value { 
+  width: 18%; 
+  padding-right: 1rem; 
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-right: 1rem;
+}
+.col-desc { 
+  width: 36%; 
+  padding-right: 1rem; 
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-right: 1rem;
+}
+.col-desc.new-desc { 
+  width: 51%; 
+  padding-right: 1rem; 
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-right: 1rem;
+}
+.col-date { 
+  width: 15%; 
+  padding-right: 1rem; 
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-right: 1rem;
+}
+
 .col-actions { width: 15%; display: flex; gap: 0.5rem; justify-content: flex-end; }
 
 .edit-button, .delete-button, .add-button {
@@ -460,6 +491,8 @@ const addParameter = async () => {
   border: 1px solid #363c4c;
   border-radius: 4px;
   color: white;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .table-row input:focus {
