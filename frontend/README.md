@@ -1,4 +1,4 @@
-# Deployment Instructions
+# Frontend Service Documentation
 
 ## Prerequisites
 
@@ -24,6 +24,7 @@
    VITE_MESSAGING_SENDER_ID=your_messaging_sender_id
    VITE_APP_ID=your_app_id
    VITE_MEASUREMENT_ID=your_measurement_id
+   VITE_API_BASE_URL=your_api_base_url #e.g. http://localhost:3000
    ```
 
    Replace the placeholders with your actual Firebase credentials.
@@ -52,8 +53,10 @@
    yarn dev
    ```
 
-5. Open your browser and navigate to `http://localhost:3000` (or the port specified in your terminal).
-
 ## Testing
 
 To test the application, ensure you have valid Firebase credentials in your `.env` file. You can sign in using the credentials you set up in your Firebase project.
+
+## Functionality Overview
+
+This application allows users to manage configuration parameters, including adding, updating, and deleting parameters. Users can also override configurations based on country codes. The application is built using Vue.js and utilizes Firebase for authentication and data storage.
