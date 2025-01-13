@@ -27,9 +27,13 @@
    VITE_API_BASE_URL=your_api_base_url #e.g. http://localhost:3000
    ```
 
-   Replace the placeholders with your actual Firebase credentials.
+3. To obtain Firebase credentials:
+   1. In Firebase Console, click the gear icon (⚙️) next to "Project Overview" and select "Project Settings"
+   2. Scroll down to the "Your apps" section
+   3. Find all required environment variables (except VITE_API_BASE_URL) under the configuration settings
+   4. For VITE_API_BASE_URL, use your backend service URL (e.g., http://localhost:3000)
 
-3. Install dependencies:
+4. Install dependencies:
 
    ```bash
    npm install
@@ -41,7 +45,7 @@
    yarn install
    ```
 
-4. Run the application in development mode:
+5. Run the application in development mode:
 
    ```bash
    npm run dev
