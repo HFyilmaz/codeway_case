@@ -123,11 +123,19 @@ const addOverride = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ value })
+      body: JSON.stringify({ 
+        value,
+        version: props.parameter.version 
+      })
     })
 
     if (!response.ok) {
       const error = await response.json()
+      if (response.status === 409) {
+        error.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
+        emit('update:show', false) // Close modal on conflict
+        return
+      }
       throw new Error(error.error || 'Failed to add country override')
     }
 
@@ -191,11 +199,20 @@ const acceptEdit = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ value })
+      body: JSON.stringify({ 
+        value,
+        version: props.parameter.version 
+      })
     })
 
     if (!response.ok) {
       const error = await response.json()
+      if (response.status === 409) {
+        error.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
+        editingOverride.value = null
+        emit('update:show', false) // Close modal on conflict
+        return
+      }
       throw new Error(error.error || 'Failed to update country override')
     }
 

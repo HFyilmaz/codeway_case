@@ -150,10 +150,10 @@ router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
 router.put('/update/:key/country/:country', verifyFirebaseToken, async (req, res) => {
   try {
     const { key, country } = req.params;
-    const { value } = req.body;
+    const { value, version } = req.body;
 
-    if (!value) {
-      return res.status(400).json({ error: 'Value is required' });
+    if (!value || version === undefined) {
+      return res.status(400).json({ error: 'Value and version are required' });
     }
 
     const configRef = db.collection('configurations').doc(key);
@@ -164,20 +164,31 @@ router.put('/update/:key/country/:country', verifyFirebaseToken, async (req, res
     }
 
     const currentData = configDoc.data();
+    // Check version conflict
+    if (currentData.version !== version) {
+      return res.status(409).json({ 
+        error: 'Conflict detected. Please refresh the data and try again.',
+        currentVersion: currentData.version
+      });
+    }
+
     const countryOverrides = currentData.countryOverrides || {};
     countryOverrides[country] = value;
 
-    await configRef.update({
+    const updateData = {
       countryOverrides,
+      version: version + 1, // Increment version
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    await configRef.update(updateData);
 
     res.json({
       message: 'Country override updated successfully',
       config: {
         key,
         ...currentData,
-        countryOverrides
+        ...updateData
       }
     });
   } catch (error) {
