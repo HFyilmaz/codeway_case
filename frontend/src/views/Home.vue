@@ -33,7 +33,7 @@
         <div v-for="param in sortedParameters" :key="param.key" class="table-row" :class="{ 'editing-row': editingParam?.key === param.key }">
           <template v-if="editingParam?.key === param.key">
             <div class="col-key">
-              <input type="text" v-model="editingParam.key" />
+              <span class="readonly-key">{{ param.key }}</span>
             </div>
             <div class="col-value">
               <input type="text" v-model="editingParam.value" />
@@ -43,7 +43,12 @@
             </div>
             <div class="col-date">{{ param.createDate }}</div>
             <div class="col-actions">
-              <button class="accept-button" @click="acceptEdit">Accept</button>
+              <button 
+                class="accept-button" 
+                @click="acceptEdit"
+                :disabled="hasVersionConflict"
+                :class="{ 'disabled-button': hasVersionConflict }"
+              >Accept</button>
               <button class="cancel-button" @click="cancelEdit">Cancel</button>
             </div>
           </template>
@@ -124,6 +129,7 @@ const editingParam = ref(null)
 const errorMessage = ref('')
 const parameters = ref([])
 const unsubscribe = ref(null)
+const hasVersionConflict = ref(false)
 
 const fetchConfigurations = async () => {
   try {
@@ -177,6 +183,7 @@ const initializeRealtimeUpdates = async () => {
           if (editingParam.value?.key === change.doc.id && 
               editingParam.value?.version !== docData.version) {
             errorMessage.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
+            hasVersionConflict.value = true
           }
           const index = parameters.value.findIndex(p => p.key === change.doc.id)
           if (index !== -1) {
@@ -266,6 +273,7 @@ const editParameter = (param) => {
     errorMessage.value = 'Please finish editing the current parameter first'
     return
   }
+  hasVersionConflict.value = false
   editingParam.value = { ...param }
 }
 
@@ -319,6 +327,7 @@ const acceptEdit = async () => {
 const cancelEdit = () => {
   editingParam.value = null
   errorMessage.value = ''
+  hasVersionConflict.value = false
 }
 
 const deleteParameter = async (param) => {
@@ -376,16 +385,7 @@ const addParameter = async () => {
       throw new Error(error.error || 'Failed to add parameter')
     }
 
-    const result = await response.json()
-    
-    parameters.value.push({
-      key: result.config.key,
-      value: result.config.value,
-      description: result.config.description,
-      version: result.config.version,
-      createDate: formatDate(result.config.createdAt)
-    })
-
+    // The real-time listener will handle adding the new parameter to the list
     newParam.value = { key: '', value: '', description: '' }
     errorMessage.value = ''
   } catch (error) {
@@ -753,5 +753,21 @@ const handleParameterUpdate = (updatedParam) => {
 
 .refresh-button i {
   font-size: 1.2rem;
+}
+
+.disabled-button {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #9e9e9e !important;
+}
+
+.readonly-key {
+  padding: 0.5rem;
+  background-color: #262b38;
+  border: 1px solid #363c4c;
+  border-radius: 4px;
+  color: #8b92a5;
+  width: 100%;
+  display: block;
 }
 </style> 
