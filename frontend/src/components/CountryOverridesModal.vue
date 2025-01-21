@@ -130,13 +130,15 @@ const addOverride = async () => {
     })
 
     if (!response.ok) {
-      const error = await response.json()
+      const errorData = await response.json()
       if (response.status === 409) {
         error.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
-        emit('update:show', false) // Close modal on conflict
+        setTimeout(() => {
+          emit('update:show', false)
+        }, 2000)
         return
       }
-      throw new Error(error.error || 'Failed to add country override')
+      throw new Error(errorData.error || 'Failed to add country override')
     }
 
     const result = await response.json()
@@ -206,14 +208,16 @@ const acceptEdit = async () => {
     })
 
     if (!response.ok) {
-      const error = await response.json()
+      const errorData = await response.json()
       if (response.status === 409) {
-        error.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
+        error.value = 'This parameter was modified by another user. Please refresh the page to see the latest changes.'
         editingOverride.value = null
-        emit('update:show', false) // Close modal on conflict
+        setTimeout(() => {
+          emit('update:show', false)
+        }, 2000)
         return
       }
-      throw new Error(error.error || 'Failed to update country override')
+      throw new Error(errorData.error || 'Failed to update country override')
     }
 
     const result = await response.json()
