@@ -109,11 +109,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import CountryOverridesModal from '../components/CountryOverridesModal.vue'
 import { API_ENDPOINTS } from '../config/api'
+import { db } from '../firebase'
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore'
 
 const router = useRouter()
 const { logout, user, getToken } = useAuth()
@@ -121,6 +123,7 @@ const sortState = ref('asc')
 const editingParam = ref(null)
 const errorMessage = ref('')
 const parameters = ref([])
+const unsubscribe = ref(null)
 
 const fetchConfigurations = async () => {
   try {
@@ -140,6 +143,7 @@ const fetchConfigurations = async () => {
       key: config.key,
       value: config.value,
       description: config.description,
+      version: config.version,
       countryOverrides: config.countryOverrides || {},
       createDate: formatDate(config.createdAt)
     }))
@@ -150,7 +154,62 @@ const fetchConfigurations = async () => {
   }
 }
 
-onMounted(fetchConfigurations)
+const initializeRealtimeUpdates = async () => {
+  try {
+    const token = await getToken()
+    if (!token) return
+
+    if (unsubscribe.value) {
+      unsubscribe.value()
+    }
+
+    const configurationsRef = collection(db, 'configurations')
+    unsubscribe.value = onSnapshot(configurationsRef, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const docData = change.doc.data()
+        const configData = {
+          key: change.doc.id,
+          ...docData,
+          createDate: formatDate(docData.createdAt)
+        }
+
+        if (change.type === 'modified') {
+          if (editingParam.value?.key === change.doc.id && 
+              editingParam.value?.version !== docData.version) {
+            errorMessage.value = 'This parameter was modified by another user. Please refresh to see the latest changes.'
+          }
+          const index = parameters.value.findIndex(p => p.key === change.doc.id)
+          if (index !== -1) {
+            parameters.value[index] = configData
+          }
+        } else if (change.type === 'added') {
+          if (!parameters.value.find(p => p.key === change.doc.id)) {
+            parameters.value.push(configData)
+          }
+        } else if (change.type === 'removed') {
+          parameters.value = parameters.value.filter(p => p.key !== change.doc.id)
+        }
+      })
+    }, (error) => {
+      console.error('Error in real-time updates:', error)
+      errorMessage.value = 'Error receiving real-time updates'
+    })
+  } catch (error) {
+    console.error('Error initializing real-time updates:', error)
+    errorMessage.value = 'Failed to initialize real-time updates'
+  }
+}
+
+onMounted(() => {
+  initializeRealtimeUpdates()
+  fetchConfigurations()
+})
+
+onUnmounted(() => {
+  if (unsubscribe.value) {
+    unsubscribe.value()
+  }
+})
 
 const formatDate = (isoDate) => {
   const date = new Date(isoDate)
@@ -203,6 +262,10 @@ const handleSignOut = async () => {
 }
 
 const editParameter = (param) => {
+  if (editingParam.value && editingParam.value.key !== param.key) {
+    errorMessage.value = 'Please finish editing the current parameter first'
+    return
+  }
   editingParam.value = { ...param }
 }
 
@@ -217,12 +280,18 @@ const acceptEdit = async () => {
       },
       body: JSON.stringify({
         value: editingParam.value.value,
-        description: editingParam.value.description
+        description: editingParam.value.description,
+        version: editingParam.value.version
       })
     })
 
     if (!response.ok) {
       const error = await response.json()
+      if (response.status === 409) {
+        errorMessage.value = error.error
+        await fetchConfigurations()
+        return
+      }
       throw new Error(error.error || 'Failed to update parameter')
     }
 
@@ -234,6 +303,7 @@ const acceptEdit = async () => {
         key: result.config.key,
         value: result.config.value,
         description: result.config.description,
+        version: result.config.version,
         createDate: formatDate(result.config.createdAt)
       }
     }
@@ -312,6 +382,7 @@ const addParameter = async () => {
       key: result.config.key,
       value: result.config.value,
       description: result.config.description,
+      version: result.config.version,
       createDate: formatDate(result.config.createdAt)
     })
 

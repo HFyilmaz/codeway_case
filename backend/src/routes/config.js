@@ -70,6 +70,7 @@ router.post('/add_config', verifyFirebaseToken, async (req, res) => {
         value,
         description,
         countryOverrides: {},
+        version: 1, // Initial version
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
@@ -82,7 +83,7 @@ router.post('/add_config', verifyFirebaseToken, async (req, res) => {
         config: {
             key,
             ...newConfig
-      }
+        }
     });
   } catch (error) {
     console.error('Error adding configuration:', error);
@@ -94,10 +95,10 @@ router.post('/add_config', verifyFirebaseToken, async (req, res) => {
 router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
   try {
     const { key } = req.params;
-    const { value, description, countryOverrides } = req.body;
+    const { value, description, countryOverrides, version } = req.body;
 
     // Validate required fields
-    if (!value || !description) {
+    if (!value || !description || version === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -108,10 +109,20 @@ router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
       return res.status(404).json({ error: 'Configuration not found' });
     }
 
+    const currentData = configDoc.data();
+    // Check version conflict
+    if (currentData.version !== version) {
+      return res.status(409).json({ 
+        error: 'Conflict detected. Please refresh the data and try again.',
+        currentVersion: currentData.version
+      });
+    }
+
     // Update configuration
     const updateData = {
       value,
       description,
+      version: version + 1, // Increment version
       updatedAt: new Date().toISOString()
     };
 
@@ -120,13 +131,13 @@ router.put('/update/:key', verifyFirebaseToken, async (req, res) => {
     }
 
     await configRef.update(updateData);
-
+    
     res.json({
       message: 'Configuration updated successfully',
       config: {
         key,
+        ...currentData,
         ...updateData,
-        createdAt: configDoc.data().createdAt
       }
     });
   } catch (error) {
